@@ -48,7 +48,7 @@ export function Hud() {
           <button onClick={reset}>Reset</button>
         </div>
         <div className="hint" style={{ marginTop: 8 }}>
-          Click an island, then another to place a bridge. Click again to double it, once more to remove. Drag to orbit.
+          Click and drag from one island to another to place a bridge. Drag again to double it, once more to remove.
         </div>
       </div>
     </div>

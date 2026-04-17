@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Environment, OrbitControls, Stars } from '@react-three/drei';
+import { useEffect, useRef, useState } from 'react';
+import { Environment, Stars } from '@react-three/drei';
 import { useGame } from '../game/store';
 import { Island } from './Island';
 import { Bridge } from './Bridge';
@@ -10,11 +10,29 @@ export function Scene() {
   const puzzle = useGame((s) => s.puzzle);
   const bridges = useGame((s) => s.bridges);
   const selectedId = useGame((s) => s.selectedId);
-  const selectIsland = useGame((s) => s.selectIsland);
+  const setSelected = useGame((s) => s.setSelected);
+  const attemptConnect = useGame((s) => s.attemptConnect);
   const degree = useGame((s) => s.degree);
   const [hovered, setHovered] = useState<number | null>(null);
+  const dragFromRef = useRef<number | null>(null);
 
   const boardSize = (puzzle.gridSize + 4) * CELL;
+
+  useEffect(() => {
+    const endDrag = () => {
+      if (dragFromRef.current !== null) {
+        dragFromRef.current = null;
+        setSelected(null);
+      }
+      document.body.style.cursor = 'default';
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    return () => {
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
+    };
+  }, [setSelected]);
 
   return (
     <>
@@ -59,7 +77,9 @@ export function Scene() {
             onPointerOut={(e) => {
               e.stopPropagation();
               setHovered((h) => (h === island.id ? null : h));
-              document.body.style.cursor = 'default';
+              if (dragFromRef.current === null) {
+                document.body.style.cursor = 'default';
+              }
             }}
           >
             <Island
@@ -69,20 +89,24 @@ export function Scene() {
               selected={selectedId === island.id}
               satisfied={d === island.clue}
               over={hovered === island.id}
-              onClick={() => selectIsland(island.id)}
+              onPointerDown={() => {
+                dragFromRef.current = island.id;
+                setSelected(island.id);
+                document.body.style.cursor = 'grabbing';
+              }}
+              onPointerUp={() => {
+                const from = dragFromRef.current;
+                if (from !== null && from !== island.id) {
+                  attemptConnect(from, island.id);
+                }
+                dragFromRef.current = null;
+                setSelected(null);
+                document.body.style.cursor = 'pointer';
+              }}
             />
           </group>
         );
       })}
-
-      <OrbitControls
-        enablePan={false}
-        minDistance={8}
-        maxDistance={22}
-        maxPolarAngle={Math.PI / 2.1}
-        minPolarAngle={Math.PI / 5}
-        target={[0, 0, 0]}
-      />
     </>
   );
 }

@@ -12,7 +12,8 @@ interface GameState {
   solved: boolean;
   errorFlash: string | null;
 
-  selectIsland: (id: number) => void;
+  setSelected: (id: number | null) => void;
+  attemptConnect: (fromId: number, toId: number) => void;
   reset: () => void;
   undoLast: () => void;
   history: Array<Map<string, Bridge>>;
@@ -38,28 +39,23 @@ export const useGame = create<GameState>((set, get) => {
     errorFlash: null,
     history: [],
 
-    selectIsland: (id) => {
-      const { selectedId, puzzle, bridges } = get();
-      if (selectedId === null) {
-        set({ selectedId: id });
-        return;
-      }
-      if (selectedId === id) {
-        set({ selectedId: null });
-        return;
-      }
-      const a = puzzle.islands[selectedId];
-      const b = puzzle.islands[id];
+    setSelected: (id) => set({ selectedId: id }),
+
+    attemptConnect: (fromId, toId) => {
+      if (fromId === toId) return;
+      const { puzzle, bridges } = get();
+      const a = puzzle.islands[fromId];
+      const b = puzzle.islands[toId];
       const check = canConnect(a, b, { islands: puzzle.islands, bridges });
       if (!check.ok) {
-        set({ errorFlash: check.reason ?? 'invalid', selectedId: id });
+        const reason = check.reason ?? 'invalid';
+        set({ errorFlash: reason });
         setTimeout(() => {
-          if (get().errorFlash === check.reason) set({ errorFlash: null });
+          if (get().errorFlash === reason) set({ errorFlash: null });
         }, 1200);
         return;
       }
       get().tryConnect(a, b);
-      set({ selectedId: null });
     },
 
     tryConnect: (a, b) => {
