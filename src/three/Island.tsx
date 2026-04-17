@@ -12,7 +12,8 @@ interface Props {
   selected: boolean;
   satisfied: boolean;
   over: boolean;
-  onClick: () => void;
+  onPointerDown: () => void;
+  onPointerUp: () => void;
 }
 
 export function Island({
@@ -22,7 +23,8 @@ export function Island({
   selected,
   satisfied,
   over,
-  onClick,
+  onPointerDown,
+  onPointerUp,
 }: Props) {
   const liftRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
@@ -56,7 +58,11 @@ export function Island({
   const emissive = satisfied ? '#1d6b4e' : over ? '#7a5310' : '#234a7a';
 
   return (
-    <group position={[x, 0, z]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+    <group
+      position={[x, 0, z]}
+      onPointerDown={(e) => { e.stopPropagation(); onPointerDown(); }}
+      onPointerUp={(e) => { e.stopPropagation(); onPointerUp(); }}
+    >
       <group ref={liftRef}>
         <mesh castShadow receiveShadow position={[0, ISLAND_HEIGHT / 2, 0]}>
           <cylinderGeometry args={[ISLAND_RADIUS, ISLAND_RADIUS * 1.15, ISLAND_HEIGHT, 40]} />
