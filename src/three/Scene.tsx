@@ -18,13 +18,38 @@ function CameraFitter({ gridSize }: { gridSize: number }) {
     const fovRad = (camera.fov * Math.PI) / 180;
     const aspect = size.width / size.height;
     const halfGrid = ((gridSize - 1) / 2) * CELL;
-    const margin = 1.25;
 
-    const hVert = (halfGrid * margin) / Math.tan(fovRad / 2);
-    const hHoriz = (halfGrid * margin) / (Math.tan(fovRad / 2) * aspect);
+    // Space reserved for HUD overlays inside the canvas. The top panel
+    // (date + seed, stacked) is taller than the bottom controls row.
+    const isCompact = Math.min(size.width, size.height) < 520;
+    const hudTopPx = isCompact ? 115 : 140;
+    const hudBottomPx = isCompact ? 75 : 100;
+    const usableHeightPx = Math.max(
+      size.height - hudTopPx - hudBottomPx,
+      size.height * 0.85,
+    );
+    const verticalScale = usableHeightPx / size.height;
+
+    // Edge margins must leave room for the island sphere (radius 0.45) plus
+    // its ring halo (~0.65 world units) so the outermost column isn't clipped.
+    // halfGrid ≈ 4.8 ⇒ a margin of 1.15 yields ~0.72 world units of breathing room.
+    const marginH = 1.15;
+    const marginV = 1.15;
+
+    const hHoriz = (halfGrid * marginH) / (Math.tan(fovRad / 2) * aspect);
+    const hVert = (halfGrid * marginV) / (Math.tan(fovRad / 2) * verticalScale);
     const newY = Math.max(hVert, hHoriz);
 
-    camera.position.setY(newY);
+    // Pan the camera along screen-vertical so the board sits in the usable
+    // region's centre rather than the raw viewport's. up = (0, 0, -1) ⇒
+    // screen-up is world -Z, so panning the camera in -Z moves the board
+    // downward on screen (and vice versa).
+    const hudPxOffset = (hudTopPx - hudBottomPx) / 2;
+    const worldPerPx = (2 * newY * Math.tan(fovRad / 2)) / size.height;
+    const camZ = -hudPxOffset * worldPerPx;
+
+    camera.position.set(0, newY, camZ);
+    camera.lookAt(0, 0, camZ);
 
     if (scene.fog instanceof Fog) {
       scene.fog.near = newY * 0.95;
