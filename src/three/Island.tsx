@@ -86,6 +86,7 @@ export function Island({
 
         <Text
           position={[0, ISLAND_HEIGHT + 0.62, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.55}
           color="#ffffff"
           anchorX="center"
