@@ -85,13 +85,14 @@ export function Island({
         </mesh>
 
         <Text
-          position={[0, ISLAND_HEIGHT + 0.02, 0]}
-          fontSize={0.42}
-          color="#0b1020"
+          position={[0, ISLAND_HEIGHT + 0.62, 0]}
+          fontSize={0.55}
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.01}
-          outlineColor="#ffffff"
+          outlineWidth={0.06}
+          outlineColor="#0a0e1e"
+          fontWeight={700}
         >
           {String(island.clue)}
         </Text>
