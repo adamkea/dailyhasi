@@ -54,6 +54,23 @@ function wouldCross(
   return false;
 }
 
+function isOnExistingBridge(x: number, y: number, state: BuildState): boolean {
+  for (const b of state.bridges.values()) {
+    const a = state.islands[b.a];
+    const bIsland = state.islands[b.b];
+    if (a.y === bIsland.y && y === a.y) {
+      const lo = Math.min(a.x, bIsland.x);
+      const hi = Math.max(a.x, bIsland.x);
+      if (lo < x && x < hi) return true;
+    } else if (a.x === bIsland.x && x === a.x) {
+      const lo = Math.min(a.y, bIsland.y);
+      const hi = Math.max(a.y, bIsland.y);
+      if (lo < y && y < hi) return true;
+    }
+  }
+  return false;
+}
+
 function islandBetween(
   fromIdx: number,
   x: number,
@@ -131,6 +148,10 @@ export function generatePuzzle(seed: number, targetIslands = 12): Puzzle {
         continue;
       }
       if (islandBetween(fromIdx, nx, ny, state)) {
+        stale++;
+        continue;
+      }
+      if (isOnExistingBridge(nx, ny, state)) {
         stale++;
         continue;
       }
