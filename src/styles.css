@@ -125,3 +125,48 @@ button:disabled {
   opacity: 0.7;
   text-align: center;
 }
+
+@media (max-width: 480px) {
+  .hud {
+    padding: 10px;
+  }
+
+  .panel {
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+
+  .title {
+    font-size: 10px;
+  }
+
+  .date {
+    font-size: 15px;
+  }
+
+  .counter {
+    gap: 6px;
+  }
+
+  button {
+    padding: 10px 16px;
+  }
+
+  .hint {
+    display: none;
+  }
+}
+
+@media (max-height: 600px) {
+  .hud {
+    padding: 8px;
+  }
+
+  .panel {
+    padding: 6px 10px;
+  }
+
+  .hint {
+    display: none;
+  }
+}

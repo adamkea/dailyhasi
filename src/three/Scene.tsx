@@ -1,10 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
+import { useThree } from '@react-three/fiber';
 import { Environment, Stars } from '@react-three/drei';
+import { Fog, PerspectiveCamera } from 'three';
 import { useGame } from '../game/store';
 import { Island } from './Island';
 import { Bridge } from './Bridge';
 import { Water } from './Water';
 import { CELL } from './coords';
+
+function CameraFitter({ gridSize }: { gridSize: number }) {
+  const camera = useThree((s) => s.camera);
+  const scene = useThree((s) => s.scene);
+  const size = useThree((s) => s.size);
+
+  useEffect(() => {
+    if (!(camera instanceof PerspectiveCamera)) return;
+    const fovRad = (camera.fov * Math.PI) / 180;
+    const aspect = size.width / size.height;
+    const halfGrid = ((gridSize - 1) / 2) * CELL;
+    const margin = 1.25;
+
+    const hVert = (halfGrid * margin) / Math.tan(fovRad / 2);
+    const hHoriz = (halfGrid * margin) / (Math.tan(fovRad / 2) * aspect);
+    const newY = Math.max(hVert, hHoriz);
+
+    camera.position.setY(newY);
+
+    if (scene.fog instanceof Fog) {
+      scene.fog.near = newY * 0.95;
+      scene.fog.far = newY * 2.1;
+    }
+  }, [camera, scene, size.width, size.height, gridSize]);
+
+  return null;
+}
 
 export function Scene() {
   const puzzle = useGame((s) => s.puzzle);
@@ -36,8 +65,9 @@ export function Scene() {
 
   return (
     <>
+      <CameraFitter gridSize={puzzle.gridSize} />
       <color attach="background" args={['#06091a']} />
-      <fog attach="fog" args={['#06091a', 18, 38]} />
+      <fog attach="fog" args={['#06091a', 17, 38]} />
 
       <ambientLight intensity={0.25} />
       <directionalLight
