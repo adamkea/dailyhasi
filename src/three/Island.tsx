@@ -8,7 +8,6 @@ import { gridToWorld, ISLAND_HEIGHT, ISLAND_RADIUS } from './coords';
 interface Props {
   island: IslandData;
   gridSize: number;
-  degree: number;
   selected: boolean;
   satisfied: boolean;
   over: boolean;
@@ -19,7 +18,6 @@ interface Props {
 export function Island({
   island,
   gridSize,
-  degree,
   selected,
   satisfied,
   over,
@@ -87,26 +85,19 @@ export function Island({
         </mesh>
 
         <Text
-          position={[0, ISLAND_HEIGHT + 0.02, 0]}
-          fontSize={0.42}
-          color="#0b1020"
+          position={[0, ISLAND_HEIGHT + 0.62, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={0.55}
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
-          outlineWidth={0.01}
-          outlineColor="#ffffff"
+          outlineWidth={0.06}
+          outlineColor="#0a0e1e"
+          fontWeight={700}
         >
           {String(island.clue)}
         </Text>
 
-        <Text
-          position={[0, ISLAND_HEIGHT + 0.58, 0]}
-          fontSize={0.2}
-          color={satisfied ? '#6bd1a8' : '#c9d4ff'}
-          anchorX="center"
-          anchorY="middle"
-        >
-          {`${degree}/${island.clue}`}
-        </Text>
       </group>
 
       <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
