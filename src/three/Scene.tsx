@@ -18,13 +18,33 @@ function CameraFitter({ gridSize }: { gridSize: number }) {
     const fovRad = (camera.fov * Math.PI) / 180;
     const aspect = size.width / size.height;
     const halfGrid = ((gridSize - 1) / 2) * CELL;
-    const margin = 1.25;
 
-    const hVert = (halfGrid * margin) / Math.tan(fovRad / 2);
-    const hHoriz = (halfGrid * margin) / (Math.tan(fovRad / 2) * aspect);
+    // Reserve space for HUD overlays (top date/bridges panel, bottom controls).
+    // Capped by a minimum usable fraction so very short viewports still render sensibly.
+    const isCompact = Math.min(size.width, size.height) < 520;
+    const hudTopPx = isCompact ? 90 : 120;
+    const hudBottomPx = isCompact ? 100 : 120;
+    const usableHeightPx = Math.max(
+      size.height - hudTopPx - hudBottomPx,
+      size.height * 0.85,
+    );
+    const verticalScale = usableHeightPx / size.height;
+
+    // Tight edge margins — the board can press close to the play-area bounds.
+    const marginH = 1.05;
+    const marginV = 1.08;
+
+    const hHoriz = (halfGrid * marginH) / (Math.tan(fovRad / 2) * aspect);
+    const hVert = (halfGrid * marginV) / (Math.tan(fovRad / 2) * verticalScale);
     const newY = Math.max(hVert, hHoriz);
 
     camera.position.setY(newY);
+
+    // Pan camera so the board centers in the usable region rather than the raw viewport.
+    // up = (0, 0, -1) ⇒ screen-up is world -Z, screen-down is world +Z.
+    const hudPxOffset = (hudBottomPx - hudTopPx) / 2;
+    const worldPerPx = (2 * newY * Math.tan(fovRad / 2)) / size.height;
+    camera.position.setZ(hudPxOffset * worldPerPx);
 
     if (scene.fog instanceof Fog) {
       scene.fog.near = newY * 0.95;
