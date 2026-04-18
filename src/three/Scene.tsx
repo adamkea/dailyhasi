@@ -85,7 +85,6 @@ export function Scene() {
             <Island
               island={island}
               gridSize={puzzle.gridSize}
-              degree={d}
               selected={selectedId === island.id}
               satisfied={d === island.clue}
               over={hovered === island.id}
