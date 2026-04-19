@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
-import { Environment, Stars } from '@react-three/drei';
+import { Environment, Grid, Stars } from '@react-three/drei';
 import { Fog, PerspectiveCamera } from 'three';
 import { useGame } from '../game/store';
 import { Island } from './Island';
@@ -46,6 +46,7 @@ export function Scene() {
   const dragFromRef = useRef<number | null>(null);
 
   const boardSize = (puzzle.gridSize + 4) * CELL;
+  const lineShift = ((puzzle.gridSize - 1) % 2) * (CELL / 2);
 
   useEffect(() => {
     const endDrag = () => {
@@ -83,6 +84,19 @@ export function Scene() {
       <Environment preset="night" />
 
       <Water size={boardSize * 1.6} />
+
+      <Grid
+        position={[lineShift, -0.05, lineShift]}
+        cellSize={CELL}
+        sectionSize={CELL * 5}
+        cellColor="#3a5fa8"
+        sectionColor="#5680d4"
+        cellThickness={0.8}
+        sectionThickness={1.2}
+        fadeDistance={70}
+        fadeStrength={1.4}
+        infiniteGrid
+      />
 
       {Array.from(bridges.values()).map((b) => (
         <Bridge
