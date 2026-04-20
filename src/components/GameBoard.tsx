@@ -145,8 +145,8 @@ export function GameBoard() {
   const dragRef = useRef<{ active: boolean; fromId: number | null }>({ active: false, fromId: null });
 
   const { islands, gridSize } = puzzle;
-  const W = gridSize * CELL_PX + 2 * PADDING;
-  const H = gridSize * CELL_PX + 2 * PADDING;
+  const W = (gridSize - 1) * CELL_PX + 2 * PADDING;
+  const H = (gridSize - 1) * CELL_PX + 2 * PADDING;
 
   const handleIslandPointerDown = useCallback((id: number, e: React.PointerEvent) => {
     if (solved) return;
