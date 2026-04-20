@@ -5,6 +5,28 @@ export interface RuleContext {
   bridges: Map<string, Bridge>;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+export function segmentsCross(a1: Point, a2: Point, b1: Point, b2: Point): boolean {
+  const aHorizontal = a1.y === a2.y;
+  const bHorizontal = b1.y === b2.y;
+  if (aHorizontal === bHorizontal) return false;
+  const h1 = aHorizontal ? a1 : b1;
+  const h2 = aHorizontal ? a2 : b2;
+  const v1 = aHorizontal ? b1 : a1;
+  const v2 = aHorizontal ? b2 : a2;
+  const hx1 = Math.min(h1.x, h2.x);
+  const hx2 = Math.max(h1.x, h2.x);
+  const hy = h1.y;
+  const vx = v1.x;
+  const vy1 = Math.min(v1.y, v2.y);
+  const vy2 = Math.max(v1.y, v2.y);
+  return hx1 < vx && vx < hx2 && vy1 < hy && hy < vy2;
+}
+
 export function canConnect(
   a: Island,
   b: Island,
@@ -32,27 +54,7 @@ export function canConnect(
     if (bridge.count === 0) continue;
     const ba = ctx.islands[bridge.a];
     const bb = ctx.islands[bridge.b];
-    const bHorizontal = ba.y === bb.y;
-    if (horizontal === bHorizontal) continue;
-    const hx1 = Math.min(
-      horizontal ? a.x : ba.x,
-      horizontal ? b.x : bb.x,
-    );
-    const hx2 = Math.max(
-      horizontal ? a.x : ba.x,
-      horizontal ? b.x : bb.x,
-    );
-    const hy = horizontal ? a.y : ba.y;
-    const vx = horizontal ? ba.x : a.x;
-    const vy1 = Math.min(
-      horizontal ? ba.y : a.y,
-      horizontal ? bb.y : b.y,
-    );
-    const vy2 = Math.max(
-      horizontal ? ba.y : a.y,
-      horizontal ? bb.y : b.y,
-    );
-    if (hx1 < vx && vx < hx2 && vy1 < hy && hy < vy2) {
+    if (segmentsCross(a, b, ba, bb)) {
       return { ok: false, reason: 'crosses a bridge' };
     }
   }

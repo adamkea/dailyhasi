@@ -1,15 +1,54 @@
 import { create } from 'zustand';
 import { Bridge, Island, Puzzle, bridgeKey } from './types';
 import { canConnect, cycleBridge, degreeOf, isSolved } from './rules';
-import { generatePuzzle } from './generator';
+import { GenerateOptions, generatePuzzle } from './generator';
 import { dailySeed, dateLabel } from './rng';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
-const DIFFICULTY_CONFIG: Record<Difficulty, { gridSize: number; targetIslands: number }> = {
-  easy:   { gridSize: 6,  targetIslands: 10 },
-  medium: { gridSize: 7,  targetIslands: 12 },
-  hard:   { gridSize: 9,  targetIslands: 18 },
+interface DifficultyConfig {
+  gridSize: number;
+  targetIslands: number;
+  options: GenerateOptions;
+}
+
+const DIFFICULTY_CONFIG: Record<Difficulty, DifficultyConfig> = {
+  easy: {
+    gridSize: 6,
+    targetIslands: 10,
+    options: {
+      doubleBridgeProb: 0.3,
+      extraDoubleBridgeProb: 0.25,
+      extraBridgeMultiplier: 1.5,
+      maxClue: 6,
+      minAdvancedFires: 1,
+      requireUnique: true,
+    },
+  },
+  medium: {
+    gridSize: 7,
+    targetIslands: 12,
+    options: {
+      doubleBridgeProb: 0.3,
+      extraDoubleBridgeProb: 0.25,
+      extraBridgeMultiplier: 1.5,
+      maxClue: 7,
+      minAdvancedFires: 4,
+      requireUnique: true,
+    },
+  },
+  hard: {
+    gridSize: 9,
+    targetIslands: 18,
+    options: {
+      doubleBridgeProb: 0.25,
+      extraDoubleBridgeProb: 0.2,
+      extraBridgeMultiplier: 1.2,
+      maxClue: 8,
+      minAdvancedFires: 10,
+      requireUnique: true,
+    },
+  },
 };
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
@@ -108,7 +147,7 @@ interface GameState {
 
 function buildPuzzle(difficulty: Difficulty, seed: number): Puzzle {
   const cfg = DIFFICULTY_CONFIG[difficulty];
-  return generatePuzzle(seed, cfg.gridSize, cfg.targetIslands);
+  return generatePuzzle(seed, cfg.gridSize, cfg.targetIslands, cfg.options);
 }
 
 export const useGame = create<GameState>((set, get) => {
