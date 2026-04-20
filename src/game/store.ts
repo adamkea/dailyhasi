@@ -12,6 +12,77 @@ const DIFFICULTY_CONFIG: Record<Difficulty, { gridSize: number; targetIslands: n
   hard:   { gridSize: 9,  targetIslands: 18 },
 };
 
+const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
+
+const STORAGE_PREFIX = 'hashi:v1:';
+
+function storageKey(seed: number, d: Difficulty): string {
+  return `${STORAGE_PREFIX}${seed}:${d}`;
+}
+
+interface StoredProgress {
+  bridges: Map<string, Bridge>;
+  timerSeconds: number;
+  solved: boolean;
+}
+
+function loadProgress(seed: number, d: Difficulty): StoredProgress | null {
+  try {
+    const raw = localStorage.getItem(storageKey(seed, d));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      bridges: Array<[string, Bridge]>;
+      timerSeconds: number;
+      solved: boolean;
+    };
+    return {
+      bridges: new Map(parsed.bridges),
+      timerSeconds: parsed.timerSeconds ?? 0,
+      solved: !!parsed.solved,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveProgress(seed: number, d: Difficulty, p: StoredProgress): void {
+  try {
+    const payload = JSON.stringify({
+      bridges: Array.from(p.bridges.entries()),
+      timerSeconds: p.timerSeconds,
+      solved: p.solved,
+    });
+    localStorage.setItem(storageKey(seed, d), payload);
+  } catch {
+    // storage unavailable or quota exceeded — ignore
+  }
+}
+
+function pruneStaleProgress(currentSeed: number): void {
+  try {
+    const currentPrefix = `${STORAGE_PREFIX}${currentSeed}:`;
+    const toRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORAGE_PREFIX) && !key.startsWith(currentPrefix)) {
+        toRemove.push(key);
+      }
+    }
+    for (const key of toRemove) localStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
+function loadCompletionMap(seed: number): Record<Difficulty, boolean> {
+  const map: Record<Difficulty, boolean> = { easy: false, medium: false, hard: false };
+  for (const d of DIFFICULTIES) {
+    const p = loadProgress(seed, d);
+    if (p?.solved) map[d] = true;
+  }
+  return map;
+}
+
 interface GameState {
   puzzle: Puzzle;
   bridges: Map<string, Bridge>;
@@ -23,6 +94,7 @@ interface GameState {
   difficulty: Difficulty;
   timerSeconds: number;
   timerActive: boolean;
+  completed: Record<Difficulty, boolean>;
 
   setSelected: (id: number | null) => void;
   attemptConnect: (fromId: number, toId: number) => void;
@@ -34,27 +106,42 @@ interface GameState {
   tickTimer: () => void;
 }
 
-function buildInitial(difficulty: Difficulty = 'medium'): { puzzle: Puzzle; label: string } {
-  const now = new Date();
+function buildPuzzle(difficulty: Difficulty, seed: number): Puzzle {
   const cfg = DIFFICULTY_CONFIG[difficulty];
-  const puzzle = generatePuzzle(dailySeed(now), cfg.gridSize, cfg.targetIslands);
-  return { puzzle, label: dateLabel(now) };
+  return generatePuzzle(seed, cfg.gridSize, cfg.targetIslands);
 }
 
 export const useGame = create<GameState>((set, get) => {
-  const { puzzle, label } = buildInitial();
+  const now = new Date();
+  const seed = dailySeed(now);
+  pruneStaleProgress(seed);
+
+  const initialDifficulty: Difficulty = 'medium';
+  const puzzle = buildPuzzle(initialDifficulty, seed);
+  const stored = loadProgress(seed, initialDifficulty);
+  const completed = loadCompletionMap(seed);
+
+  const persist = () => {
+    const s = get();
+    saveProgress(dailySeed(new Date()), s.difficulty, {
+      bridges: s.bridges,
+      timerSeconds: s.timerSeconds,
+      solved: s.solved,
+    });
+  };
 
   return {
     puzzle,
-    bridges: new Map(),
+    bridges: stored?.bridges ?? new Map(),
     selectedId: null,
-    dateLabel: label,
-    solved: false,
+    dateLabel: dateLabel(now),
+    solved: stored?.solved ?? false,
     errorFlash: null,
     history: [],
-    difficulty: 'medium',
-    timerSeconds: 0,
+    difficulty: initialDifficulty,
+    timerSeconds: stored?.timerSeconds ?? 0,
     timerActive: false,
+    completed,
 
     setSelected: (id) => set({ selectedId: id }),
 
@@ -77,18 +164,28 @@ export const useGame = create<GameState>((set, get) => {
     },
 
     tryConnect: (a, b) => {
-      const { puzzle, bridges, history } = get();
+      const { puzzle, bridges, history, difficulty, completed } = get();
       const next = cycleBridge(a, b, { islands: puzzle.islands, bridges });
       const solved = isSolved(puzzle.islands, next);
+      const nextCompleted =
+        solved && !completed[difficulty]
+          ? { ...completed, [difficulty]: true }
+          : completed;
       set({
         bridges: next,
         history: [...history, bridges],
         solved,
+        completed: nextCompleted,
         ...(solved ? { timerActive: false } : {}),
       });
+      persist();
     },
 
     reset: () => {
+      const { difficulty, completed } = get();
+      const nextCompleted = completed[difficulty]
+        ? { ...completed, [difficulty]: false }
+        : completed;
       set({
         bridges: new Map(),
         selectedId: null,
@@ -97,7 +194,9 @@ export const useGame = create<GameState>((set, get) => {
         history: [],
         timerSeconds: 0,
         timerActive: false,
+        completed: nextCompleted,
       });
+      persist();
     },
 
     undoLast: () => {
@@ -110,29 +209,33 @@ export const useGame = create<GameState>((set, get) => {
         solved: false,
         selectedId: null,
       });
+      persist();
     },
 
     degree: (id) => degreeOf(id, get().bridges.values()),
 
     setDifficulty: (d) => {
       const now = new Date();
-      const cfg = DIFFICULTY_CONFIG[d];
-      const puzzle = generatePuzzle(dailySeed(now), cfg.gridSize, cfg.targetIslands);
+      const seed = dailySeed(now);
+      const puzzle = buildPuzzle(d, seed);
+      const stored = loadProgress(seed, d);
       set({
         difficulty: d,
         puzzle,
-        bridges: new Map(),
+        bridges: stored?.bridges ?? new Map(),
         selectedId: null,
-        solved: false,
+        solved: stored?.solved ?? false,
         errorFlash: null,
         history: [],
-        timerSeconds: 0,
+        timerSeconds: stored?.timerSeconds ?? 0,
         timerActive: false,
       });
     },
 
     tickTimer: () => {
-      if (!get().solved) set((s) => ({ timerSeconds: s.timerSeconds + 1 }));
+      if (get().solved) return;
+      set((s) => ({ timerSeconds: s.timerSeconds + 1 }));
+      persist();
     },
   };
 });

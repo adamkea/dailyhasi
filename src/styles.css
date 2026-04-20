@@ -185,6 +185,10 @@ body {
 
 .tab:hover:not([aria-selected="true"]) { color: var(--ink); }
 
+.tab[data-completed="true"] { color: var(--seal); }
+.tab[data-completed="true"] .tab-jp { color: var(--seal); opacity: 1; }
+.tab[aria-selected="true"][data-completed="true"] { color: var(--seal); }
+
 .status-cluster {
   display: flex;
   align-items: center;

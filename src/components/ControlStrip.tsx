@@ -12,6 +12,7 @@ export function ControlStrip() {
   const timerActive  = useGame(s => s.timerActive);
   const setDifficulty = useGame(s => s.setDifficulty);
   const tickTimer    = useGame(s => s.tickTimer);
+  const completed    = useGame(s => s.completed);
 
   useEffect(() => {
     if (!timerActive) return;
@@ -28,6 +29,7 @@ export function ControlStrip() {
             className="tab"
             role="tab"
             aria-selected={difficulty === t.key}
+            data-completed={completed[t.key] ? 'true' : undefined}
             onClick={() => setDifficulty(t.key)}
           >
             <span className="tab-jp">{t.jp}</span>
