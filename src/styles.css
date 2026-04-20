@@ -268,6 +268,36 @@ body {
   color: var(--ink);
 }
 
+.action-btn {
+  background: none;
+  border: 1px solid var(--rule-strong);
+  color: var(--sumi);
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.action-btn:hover { color: var(--ink); border-color: var(--ink); background: var(--paper-2); }
+.action-btn:active { transform: translateY(1px); }
+.action-btn kbd {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 1px 5px;
+  font-size: 9px;
+  color: var(--sumi);
+}
+
+@media (max-width: 760px) {
+  .action-btn kbd { display: none; }
+  .action-btn { padding: 8px 16px; font-size: 11px; }
+}
+
 .sep { color: var(--rule-strong); letter-spacing: 0; }
 
 /* ============ STAGE ============ */

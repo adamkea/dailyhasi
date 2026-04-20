@@ -30,7 +30,12 @@ export default function App() {
       <Header onOpenRules={() => setRulesOpen(true)} />
       <ControlStrip />
       <div className="instructions">
-        <span><kbd>Z</kbd> undo · <kbd>R</kbd> reset</span>
+        <button className="action-btn" onClick={() => undoLast()} aria-label="Undo last move">
+          Undo <kbd>Z</kbd>
+        </button>
+        <button className="action-btn" onClick={() => reset()} aria-label="Reset puzzle">
+          Reset <kbd>R</kbd>
+        </button>
       </div>
       <div className="stage-wrap">
         <div className="stage">
