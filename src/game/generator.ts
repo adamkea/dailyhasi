@@ -114,9 +114,8 @@ function addBridge(
   }
 }
 
-export function generatePuzzle(seed: number, targetIslands = 12): Puzzle {
+export function generatePuzzle(seed: number, gridSize = 7, targetIslands = 12): Puzzle {
   const rand = mulberry32(seed);
-  const gridSize = 7;
 
   for (let attempt = 0; attempt < 32; attempt++) {
     const state: BuildState = {
@@ -208,7 +207,7 @@ export function generatePuzzle(seed: number, targetIslands = 12): Puzzle {
     if (!allValid) continue;
 
     return {
-      id: `seed-${seed}`,
+      id: `seed-${seed}-${gridSize}`,
       gridSize,
       islands: state.islands,
       solution: Array.from(state.bridges.values()),
