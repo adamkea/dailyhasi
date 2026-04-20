@@ -288,6 +288,8 @@ body {
   background: radial-gradient(ellipse at center, rgba(244,237,224,0) 55%, rgba(92,82,72,0.08) 100%);
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 /* Corner bracket marks */

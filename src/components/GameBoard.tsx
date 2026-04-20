@@ -151,6 +151,12 @@ export function GameBoard() {
   const handleIslandPointerDown = useCallback((id: number, e: React.PointerEvent) => {
     if (solved) return;
     e.stopPropagation();
+    // Release implicit pointer capture (set on touch pointerdown) so that
+    // pointerenter/leave fire on other islands as the finger drags across them.
+    const target = e.currentTarget as Element;
+    if (target.hasPointerCapture?.(e.pointerId)) {
+      target.releasePointerCapture(e.pointerId);
+    }
     dragRef.current = { active: true, fromId: id };
     if (selectedId === id) {
       setSelected(null);
