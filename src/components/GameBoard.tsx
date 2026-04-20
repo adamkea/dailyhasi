@@ -13,9 +13,11 @@ function gy(row: number) { return PADDING + row * CELL_PX; }
 interface BridgeLineProps {
   bridge: Bridge;
   islands: Island[];
+  onRemove: (e: React.PointerEvent) => void;
+  interactive: boolean;
 }
 
-function BridgeLine({ bridge, islands }: BridgeLineProps) {
+function BridgeLine({ bridge, islands, onRemove, interactive }: BridgeLineProps) {
   const a = islands[bridge.a];
   const b = islands[bridge.b];
   const x1 = gx(a.x), y1 = gy(a.y);
@@ -29,12 +31,28 @@ function BridgeLine({ bridge, islands }: BridgeLineProps) {
   const sx = x1 + ux * trim, sy = y1 + uy * trim;
   const ex = x2 - ux * trim, ey = y2 - uy * trim;
 
+  const hit = (
+    <line
+      x1={sx} y1={sy} x2={ex} y2={ey}
+      stroke="transparent" strokeWidth={18} strokeLinecap="round"
+      style={{ cursor: interactive ? 'pointer' : 'default' }}
+    />
+  );
+
+  const groupProps = interactive
+    ? { onPointerDown: onRemove }
+    : {};
+
   if (bridge.count === 1) {
     return (
-      <line
-        x1={sx} y1={sy} x2={ex} y2={ey}
-        stroke="var(--ink-soft)" strokeWidth={2} strokeLinecap="round"
-      />
+      <g {...groupProps}>
+        {hit}
+        <line
+          x1={sx} y1={sy} x2={ex} y2={ey}
+          stroke="var(--ink-soft)" strokeWidth={2} strokeLinecap="round"
+          pointerEvents="none"
+        />
+      </g>
     );
   }
 
@@ -45,12 +63,15 @@ function BridgeLine({ bridge, islands }: BridgeLineProps) {
   const oy = isHoriz ? OFFSET : 0;
 
   return (
-    <>
+    <g {...groupProps}>
+      {hit}
       <line x1={sx - ox} y1={sy - oy} x2={ex - ox} y2={ey - oy}
-        stroke="var(--ink-soft)" strokeWidth={1.5} strokeLinecap="round" />
+        stroke="var(--ink-soft)" strokeWidth={1.5} strokeLinecap="round"
+        pointerEvents="none" />
       <line x1={sx + ox} y1={sy + oy} x2={ex + ox} y2={ey + oy}
-        stroke="var(--ink-soft)" strokeWidth={1.5} strokeLinecap="round" />
-    </>
+        stroke="var(--ink-soft)" strokeWidth={1.5} strokeLinecap="round"
+        pointerEvents="none" />
+    </g>
   );
 }
 
@@ -139,6 +160,7 @@ export function GameBoard() {
   const solved = useGame(s => s.solved);
   const setSelected = useGame(s => s.setSelected);
   const attemptConnect = useGame(s => s.attemptConnect);
+  const removeBridge = useGame(s => s.removeBridge);
   const degree = useGame(s => s.degree);
 
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -239,7 +261,16 @@ export function GameBoard() {
       {/* Bridges layer */}
       <g>
         {Array.from(bridges.values()).filter(b => b.count > 0).map(b => (
-          <BridgeLine key={`${b.a}-${b.b}`} bridge={b} islands={islands} />
+          <BridgeLine
+            key={`${b.a}-${b.b}`}
+            bridge={b}
+            islands={islands}
+            interactive={!solved}
+            onRemove={(e) => {
+              e.stopPropagation();
+              removeBridge(b.a, b.b);
+            }}
+          />
         ))}
       </g>
 
