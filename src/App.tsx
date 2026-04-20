@@ -30,10 +30,6 @@ export default function App() {
       <Header onOpenRules={() => setRulesOpen(true)} />
       <ControlStrip />
       <div className="instructions">
-        <span>Click an island, then click another to connect — or <kbd>drag</kbd></span>
-        <span className="sep">·</span>
-        <span>Click a bridge again to add a second — third click removes it</span>
-        <span className="sep">·</span>
         <span><kbd>Z</kbd> undo · <kbd>R</kbd> reset</span>
       </div>
       <div className="stage-wrap">
