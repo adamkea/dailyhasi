@@ -145,8 +145,8 @@ export function GameBoard() {
   const dragRef = useRef<{ active: boolean; fromId: number | null }>({ active: false, fromId: null });
 
   const { islands, gridSize } = puzzle;
-  const W = gridSize * CELL_PX + 2 * PADDING;
-  const H = gridSize * CELL_PX + 2 * PADDING;
+  const W = (gridSize - 1) * CELL_PX + 2 * PADDING;
+  const H = (gridSize - 1) * CELL_PX + 2 * PADDING;
 
   const handleIslandPointerDown = useCallback((id: number, e: React.PointerEvent) => {
     if (solved) return;
@@ -216,6 +216,26 @@ export function GameBoard() {
       onPointerDown={() => { if (!dragRef.current.active) setSelected(null); }}
       onDragStart={(e) => e.preventDefault()}
     >
+      {/* Grid lines layer */}
+      <g>
+        {Array.from({ length: gridSize }, (_, i) => (
+          <line
+            key={`v-${i}`}
+            x1={gx(i)} y1={gy(0)}
+            x2={gx(i)} y2={gy(gridSize - 1)}
+            stroke="var(--rule)" strokeWidth={1}
+          />
+        ))}
+        {Array.from({ length: gridSize }, (_, i) => (
+          <line
+            key={`h-${i}`}
+            x1={gx(0)} y1={gy(i)}
+            x2={gx(gridSize - 1)} y2={gy(i)}
+            stroke="var(--rule)" strokeWidth={1}
+          />
+        ))}
+      </g>
+
       {/* Bridges layer */}
       <g>
         {Array.from(bridges.values()).filter(b => b.count > 0).map(b => (
