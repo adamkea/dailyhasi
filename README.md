@@ -38,6 +38,7 @@ src/
     types.ts             # Island, Bridge, Puzzle
     rng.ts               # deterministic daily seed
     generator.ts         # builds a valid daily puzzle
+    solver.ts            # constraint-propagation + backtracking Hashi solver
     rules.ts             # canConnect / cycleBridge / isSolved
     store.ts             # zustand game store
   three/
@@ -54,10 +55,19 @@ src/
 
 `dailySeed(new Date())` returns `YYYYMMDD`. Combined with `mulberry32` in `src/game/rng.ts` it feeds `generatePuzzle`, so everyone playing on the same day gets the same puzzle.
 
+## Difficulty
+
+Each difficulty tunes both size and the kind of reasoning required. The generator
+produces candidates with lower bridge density and rejects any candidate where an
+island is "saturated" (clue equals twice its neighbour count — a dead giveaway
+that every incident edge is a double bridge). Remaining candidates are then run
+through `src/game/solver.ts`; only puzzles with a unique solution that require a
+configurable minimum number of non-saturation deductions are accepted.
+
+Per-difficulty knobs live in `DIFFICULTY_CONFIG` in `src/game/store.ts`.
+
 ## Next steps
 
-- Solver + uniqueness check for generated puzzles
 - Persist progress in `localStorage` keyed by seed
 - Share-a-streak / emoji grid summary
-- Difficulty modes (more islands, larger grid)
 - Touch-optimised controls and reduced-motion mode
