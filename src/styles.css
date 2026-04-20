@@ -272,6 +272,8 @@ body {
   max-width: 680px;
   position: relative;
   background: radial-gradient(ellipse at center, rgba(244,237,224,0) 55%, rgba(92,82,72,0.08) 100%);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Corner bracket marks */

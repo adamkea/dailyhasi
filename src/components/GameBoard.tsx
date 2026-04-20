@@ -208,6 +208,7 @@ export function GameBoard() {
       width="100%" height="100%"
       style={{ display: 'block', cursor: solved ? 'default' : 'crosshair' }}
       onPointerDown={() => { if (!dragRef.current.active) setSelected(null); }}
+      onDragStart={(e) => e.preventDefault()}
     >
       {/* Bridges layer */}
       <g>
