@@ -137,6 +137,7 @@ interface GameState {
 
   setSelected: (id: number | null) => void;
   attemptConnect: (fromId: number, toId: number) => void;
+  removeBridge: (a: number, b: number) => void;
   reset: () => void;
   undoLast: () => void;
   tryConnect: (a: Island, b: Island) => void;
@@ -200,6 +201,26 @@ export const useGame = create<GameState>((set, get) => {
       }
       if (!get().timerActive) set({ timerActive: true });
       get().tryConnect(a, b);
+    },
+
+    removeBridge: (aId, bId) => {
+      const { bridges, history, solved } = get();
+      if (solved) return;
+      const key = bridgeKey(aId, bId);
+      const existing = bridges.get(key);
+      if (!existing) return;
+      const next = new Map(bridges);
+      if (existing.count > 1) {
+        next.set(key, { ...existing, count: (existing.count - 1) as 0 | 1 | 2 });
+      } else {
+        next.delete(key);
+      }
+      set({
+        bridges: next,
+        history: [...history, bridges],
+        selectedId: null,
+      });
+      persist();
     },
 
     tryConnect: (a, b) => {
