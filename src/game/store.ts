@@ -207,9 +207,14 @@ export const useGame = create<GameState>((set, get) => {
       const { bridges, history, solved } = get();
       if (solved) return;
       const key = bridgeKey(aId, bId);
-      if (!bridges.has(key)) return;
+      const existing = bridges.get(key);
+      if (!existing) return;
       const next = new Map(bridges);
-      next.delete(key);
+      if (existing.count > 1) {
+        next.set(key, { ...existing, count: (existing.count - 1) as 0 | 1 | 2 });
+      } else {
+        next.delete(key);
+      }
       set({
         bridges: next,
         history: [...history, bridges],
